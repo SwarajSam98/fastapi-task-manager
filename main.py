@@ -88,6 +88,7 @@ def update_project(project_id: int, updated_project: ProjectUpdate, db: Session 
         db_project.title = updated_project.title
     if updated_project.description is not None:
         db_project.description = updated_project.description
+    db.commit()     
     return {"message": "project updated successfuly"}
 
 @app.delete("/project/{project_id}")
@@ -151,11 +152,10 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
 def create_task(task: Task, db: Session = Depends(get_db)):
     # Check if the task with the same ID already exists
     db_task = db.query(database_models.Task).filter(database_models.Task.id == task.id).first()
-    if db_task:
-        return {"error": "Task with this ID already exists"}
-    db.add(task)
+    db_task = database_models.Task(**task.model_dump())
+    db.add(db_task)
     db.commit()
-    db.refresh(task)
+    db.refresh(db_task)
     return {"message": "Task created successfuly", "task": db_task}
 
 @app.put("/tasks/{task_id}")
